@@ -92,8 +92,8 @@ app.get('/api/run', (req, res) => {
   res.write(`data: ${JSON.stringify({hasDryRun: cmd.hasDryRun, out: String(cmdString) })}\n\n`)
 
 
-  const runCommand = spawn('ping', ['192.168.2.57']);
-  //const runCommand = spawn('sudo', cmdlist);
+  //const runCommand = spawn('ping', ['192.168.2.57']);
+  const runCommand = spawn('sudo', cmdlist);
 
 
   runCommand.stdout.setEncoding('utf8');
