@@ -20,6 +20,7 @@ function runCommand(id, dr) {
     const evtSource = new EventSource(`/api/run?id=${id}&dr=${dr ? 1 : 0}`);
 
     evtSource.addEventListener('start', (e) => {
+        document.getElementById('doit').style.display = 'none';
         const data = JSON.parse(e.data);
         command.textContent = data.out;
         hasDryRun = data.hasDryRun;

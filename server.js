@@ -13,6 +13,11 @@ app.use(express.json())
 
 app.use(express.static(path.join(__dirname, 'public')))
 
+const hddPath = '/mnt/sda/shared/timon';
+const ssdPath = '/home/timon/immich-app';
+const backupPath = '/mnt/sdb'
+const folderName = 'fotos';
+
 const commands = [
   {
     name: 'get state',
@@ -30,7 +35,7 @@ const commands = [
     command: [
       '/usr/bin/rsync', '-arv',
       '--exclude', '*/sd', '--exclude', '*/extra meuk', '--delete',
-      '/mnt/sda/shared/timon/fotos', '/home/timon/hdd-backup/timon'
+      path.join(hddPath, folderName), path.join(ssdPath, 'hdd-backup/timon')
     ]
   },
   {
@@ -38,7 +43,15 @@ const commands = [
     hasDryRun: true,
     command: [
       '/usr/bin/rsync', '-arv', '--delete',
-      '/home/timon/hdd-backup/timon/fotos', '/mnt/sda/shared/timon'
+      path.join(ssdPath, '/hdd-backup/timon', folderName), hddPath
+    ]
+  },
+  {
+    name: "sync ssd -> backup",
+    hasDryRun: true,
+    command: [
+      '/usr/bin/rsync', '-arv', '--exclude', 'postgres','--delete',
+      ssdPath, backupPath
     ]
   }
 ]
@@ -73,11 +86,15 @@ app.get('/api/run', (req, res) => {
   }
 
   const cmdlist = cmd.command.concat(additionalAgrs);
-  const runCommand = spawn('ping', ['192.168.2.57']);
-  //const runCommand = spawn('sudo', cmdlist);
-  const cmdString = 'sudo ' + cmdlist.join(' ');
+
+  const cmdString = ('sudo ' + cmdlist.join(' ')).replace(new RegExp('/', 'g'), '\\');
   res.write(`event: start\n`);
   res.write(`data: ${JSON.stringify({hasDryRun: cmd.hasDryRun, out: String(cmdString) })}\n\n`)
+
+
+  const runCommand = spawn('ping', ['192.168.2.57']);
+  //const runCommand = spawn('sudo', cmdlist);
+
 
   runCommand.stdout.setEncoding('utf8');
   runCommand.stdout.on('data', (chunk) => {
