@@ -14,13 +14,14 @@ async function loadCommands() {
 function runCommand(id, dr) {
     const command = document.getElementById('command');
     const output = document.getElementById('output');
+    document.getElementById('doit').style.display = 'none';
     let hasDryRun = false;
     output.textContent = '';
 
     const evtSource = new EventSource(`/api/run?id=${id}&dr=${dr ? 1 : 0}`);
 
     evtSource.addEventListener('start', (e) => {
-        document.getElementById('doit').style.display = 'none';
+        
         const data = JSON.parse(e.data);
         command.textContent = data.out;
         hasDryRun = data.hasDryRun;
