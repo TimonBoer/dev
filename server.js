@@ -53,7 +53,8 @@ const commands = [
     name: "sync ssd -> backup",
     hasDryRun: true,
     command: [
-      '/usr/bin/rsync', '-arv', '--exclude', 'postgres','--delete',
+      '/usr/bin/rsync', '-arv', '--exclude', 'postgres',
+      '--no-perms', '--no-group', '--no-owner', '--delete',
       ssdPath, backupPath
     ]
   }
@@ -131,6 +132,8 @@ app.post('/api/kill-all', (req, res) => {
   pids.forEach((pid) => {
     process.kill(pid);
   });
+  res.json({ ok: true, killed: pids.length });
+  pids = [];
 });
 
 app.listen(port, () => {

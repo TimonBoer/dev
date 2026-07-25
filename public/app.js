@@ -67,4 +67,8 @@ function runCommand(id, dr) {
     };
 }
 
+async function killAll() {
+  await fetch('/api/kill-all', { method: 'POST' });
+}
+
 loadCommands();
