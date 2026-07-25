@@ -18,6 +18,8 @@ const ssdPath = '/home/timon/immich-app';
 const backupPath = '/mnt/sdb'
 const folderName = 'fotos';
 
+let pids = [];
+
 const commands = [
   {
     name: 'get state',
@@ -89,12 +91,16 @@ app.get('/api/run', (req, res) => {
   const cmdlist = cmd.command.concat(additionalAgrs);
 
   const cmdString = ('sudo ' + cmdlist.join(' ')).replace(new RegExp('/', 'g'), '\\');
-  res.write(`event: start\n`);
-  res.write(`data: ${JSON.stringify({hasDryRun: cmd.hasDryRun, out: String(cmdString) })}\n\n`)
+  res.write(`event: cmd\n`);
+  res.write(`data: ${JSON.stringify({hasDryRun: cmd.hasDryRun, out: String(cmdString)})}\n\n`)
 
 
   //const runCommand = spawn('ping', ['192.168.2.57']);
   const runCommand = spawn('sudo', cmdlist);
+
+  res.write(`event: start\n`);
+  res.write(`data: ${JSON.stringify({pid: runCommand.pid})}\n\n`)
+  pids.push(runCommand.pid);
 
 
   runCommand.stdout.setEncoding('utf8');
@@ -118,6 +124,12 @@ app.get('/api/run', (req, res) => {
     res.write(`event: exit\n`);
     res.write(`data: exited with code ${code}\n\n`);
     res.end();
+  });
+});
+
+app.post('/api/kill-all', (req, res) => {
+  pids.forEach((pid) => {
+    process.kill(pid);
   });
 });
 

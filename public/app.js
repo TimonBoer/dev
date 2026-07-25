@@ -15,16 +15,22 @@ function runCommand(id, dr) {
     const command = document.getElementById('command');
     const output = document.getElementById('output');
     document.getElementById('doit').style.display = 'none';
+
     let hasDryRun = false;
+    let pid;
     output.textContent = '';
 
     const evtSource = new EventSource(`/api/run?id=${id}&dr=${dr ? 1 : 0}`);
 
-    evtSource.addEventListener('start', (e) => {
-        
+    evtSource.addEventListener('cmd', (e) => {
         const data = JSON.parse(e.data);
         command.textContent = data.out;
         hasDryRun = data.hasDryRun;
+    });
+
+    evtSource.addEventListener('start', (e) => {
+        const data = JSON.parse(e.data);
+        pid = data.pid;
     });
 
     evtSource.addEventListener('stdout', (e) => {
