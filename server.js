@@ -42,7 +42,8 @@ const commands = [
     name: "sync ssd -> hdd",
     hasDryRun: true,
     command: [
-      '/usr/bin/rsync', '-arv', '--delete',
+      '/usr/bin/rsync', '-arv',
+      '--exclude', '*/sd', '--exclude', '*/extra meuk', '--delete',
       path.join(ssdPath, '/hdd-backup/timon', folderName), hddPath
     ]
   },
