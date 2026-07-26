@@ -22,6 +22,11 @@ let pids = [];
 
 const commands = [
   {
+    name: 'mount all',
+    hasDryRun: false,
+    command: ['mount', '-a']
+  },
+  {
     name: 'get state',
     hasDryRun: false,
     command: ['/sbin/hdparm', '-C', '/dev/sda']
