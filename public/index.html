@@ -4,17 +4,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dev</title>
-    <style>
-    </style>
+    <link rel="stylesheet" href="styles.css">
 </head>
+
 <body>
-    <div id="buttons">Loading buttons...</div>
-    <button onclick="killAll()">Kill all</button>
-    <p id="command">Command</p>
-    <pre id="output">output</pre>
-    <button onclick="killAll()">Kill all</button>
-    <button id="doit" style="display: none">Do it</button>
+    <div id="container">
+        <div id="buttons">loading buttons...</div>
+        <button  class="destructive" onclick="stop()">stop</button>
+        <div id="out_container">
+            <pre id="command">command</pre>
+            <pre id="output">output</pre>
+        </div>
+        <button id="doit" style="display: none">do it</button>
+    </div>
 
     <script src="app.js"></script>
 </body>
+
 </html>

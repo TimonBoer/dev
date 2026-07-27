@@ -1,6 +1,7 @@
 const express = require('express')
 const path = require('path');
 const { spawn } = require('child_process');
+const { send } = require('process');
 
 const app = express()
 const port = 3141
@@ -17,8 +18,6 @@ const hddPath = '/mnt/sda/shared/timon';
 const ssdPath = '/home/timon/immich-app';
 const backupPath = '/mnt/sdb'
 const folderName = 'fotos';
-
-let pids = [];
 
 const commands = [
   {
@@ -65,6 +64,16 @@ const commands = [
   }
 ]
 
+let runningCommand = null;
+
+let outputBuffer = [];   // array of {event, data} — the full history of the current/last run
+let subscribers = [];    // list of `res` objects currently listening live
+
+function broadcast(event, data) {
+  outputBuffer.push({ event, data });
+  subscribers.forEach((res) => sendEvent(res, event, data));
+}
+
 // list available commands for the UI to render buttons from
 app.get('/api/commands', (req, res) => {
   const list = Object.entries(commands).map(([id, c]) => ({
@@ -73,72 +82,87 @@ app.get('/api/commands', (req, res) => {
   res.json(list);
 });
 
-app.get('/api/run', (req, res) => {
+app.post('/api/run', (req, res) => {
+  if (runningCommand){
+    res.status(409).json({ error: 'A command is already running' });
+    return;
+  }
   const id = req.query.id;
-  const dryRun = req.query.dr !== '0';
+  const doit = req.query.doit === '1';
   const cmd = commands[id];
   if (!cmd) {
     res.status(404).end();
     return;
   }
 
-  const headers = {
+  let additionalArgs = [];
+  if (cmd.hasDryRun && !doit) {
+    additionalArgs.push('-n');
+  }
+
+  const cmdlist = cmd.command.concat(additionalArgs);
+
+  outputBuffer = []; // fresh history for this run
+  //runningCommand = spawn('ping', ['192.168.0.116']);
+  runningCommand = spawn('sudo', cmdlist);
+  runningCommand.stdout.setEncoding('utf8');
+
+  // Attach listeners immediately — before returning the response —
+  // so nothing can be emitted before we're capturing it.
+  runningCommand.stdout.on('data', (chunk) => {
+    broadcast('stdout', JSON.stringify({ out: String(chunk) }));
+  });
+
+  runningCommand.stderr.on('data', (data) => {
+    broadcast('stderr', JSON.stringify({ out: String(data) }));
+  });
+
+  runningCommand.once('error', (err) => {
+    broadcast('err', JSON.stringify({ out: String(err) }));
+    runningCommand = null;
+  });
+
+  runningCommand.once('exit', (code) => {
+    broadcast('exit', `exited with code ${code}`);
+    runningCommand = null;
+  });
+
+  const cmdString = ('sudo ' + cmdlist.join(' ')).replace(new RegExp('/', 'g'), '\\');
+  broadcast('cmd', cmdString);
+  const hasDryRun = cmd.hasDryRun;
+
+  res.json({ hasDryRun, cmdString });
+});
+
+app.get('/api/subscribe', (req, res) => {
+  res.writeHead(200, {
     'Content-Type': 'text/event-stream',
     Connection: 'keep-alive',
     'Cache-Control': 'no-cache',
-  };
-  res.writeHead(200, headers);
+  });
 
-  let additionalAgrs = [];
-  if (cmd.hasDryRun && dryRun) {
-    additionalAgrs.push('-n');
+  // Catch this connection up on everything that already happened
+  outputBuffer.forEach(({ event, data }) => sendEvent(res, event, data));
+
+  if (runningCommand) {
+    subscribers.push(res);
+    req.on('close', () => {
+      subscribers = subscribers.filter((s) => s !== res);
+    });
+  } else {
+    res.end(); // nothing running, buffer replay above is all there is
   }
-
-  const cmdlist = cmd.command.concat(additionalAgrs);
-
-  const cmdString = ('sudo ' + cmdlist.join(' ')).replace(new RegExp('/', 'g'), '\\');
-  res.write(`event: cmd\n`);
-  res.write(`data: ${JSON.stringify({hasDryRun: cmd.hasDryRun, out: String(cmdString)})}\n\n`)
-
-
-  //const runCommand = spawn('ping', ['192.168.2.57']);
-  const runCommand = spawn('sudo', cmdlist);
-
-  res.write(`event: start\n`);
-  res.write(`data: ${JSON.stringify({pid: runCommand.pid})}\n\n`)
-  pids.push(runCommand.pid);
-
-
-  runCommand.stdout.setEncoding('utf8');
-  runCommand.stdout.on('data', (chunk) => {
-    res.write(`event: stdout\n`);
-    res.write(`data: ${JSON.stringify({ out: String(chunk) })}\n\n`);
-  });
-
-  runCommand.stderr.on('data', (data) => {
-    res.write(`event: stderr\n`);
-    res.write(`data: ${JSON.stringify({ out: String(data) })}\n\n`);
-  });
-
-  runCommand.once('error', (err) => {
-    res.write(`event: err\n`);
-    res.write(`data: ${JSON.stringify({ out: String(err) })}\n\n`);
-    res.end();
-  });
-
-  runCommand.once('exit', (code) => {
-    res.write(`event: exit\n`);
-    res.write(`data: exited with code ${code}\n\n`);
-    res.end();
-  });
 });
 
-app.post('/api/kill-all', (req, res) => {
-  pids.forEach((pid) => {
-    process.kill(pid);
-  });
-  res.json({ ok: true, killed: pids.length });
-  pids = [];
+function sendEvent(res, event, data) {
+  res.write(`event: ${event}\n`);
+  res.write(`data: ${data}\n\n`);
+}
+
+app.post('/api/stop', (req, res) => {
+  if (runningCommand) {
+    runningCommand.kill();
+  }
 });
 
 app.listen(port, () => {

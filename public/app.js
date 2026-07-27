@@ -6,31 +6,40 @@ async function loadCommands() {
     cmds.forEach(c => {
         const btn = document.createElement('button');
         btn.textContent = c.label;
-        btn.onclick = () => runCommand(c.id, true);
+        btn.onclick = () => runCommand(c.id, false);
         container.appendChild(btn);
     });
 }
 
-function runCommand(id, dr) {
-    const command = document.getElementById('command');
-    const output = document.getElementById('output');
-    document.getElementById('doit').style.display = 'none';
+async function runCommand(id, doit) {
+    const doitBtn = document.getElementById('doit');
+    doitBtn.style.display = 'none';
 
-    let hasDryRun = false;
-    let pid;
+    const res = await fetch(`/api/run?id=${id}&doit=${doit ? 1 : 0}`, { method: 'POST' });
+    subscribeToOutput();
+    const {hasDryRun, cmdString} = await res.json();
+
+    console.log(hasDryRun, cmdString);
+
+    if (hasDryRun && !doit) {
+        doitBtn.onclick = () => runCommand(id, true);
+        doitBtn.style.display = 'block';
+    } else {
+        doitBtn.style.display = 'none';
+    }
+}
+
+function subscribeToOutput() {
+    const command = document.getElementById('command');
+
+    const output = document.getElementById('output');
     output.textContent = '';
 
-    const evtSource = new EventSource(`/api/run?id=${id}&dr=${dr ? 1 : 0}`);
+    const evtSource = new EventSource(`api/subscribe`);
 
     evtSource.addEventListener('cmd', (e) => {
-        const data = JSON.parse(e.data);
-        command.textContent = data.out;
-        hasDryRun = data.hasDryRun;
-    });
-
-    evtSource.addEventListener('start', (e) => {
-        const data = JSON.parse(e.data);
-        pid = data.pid;
+        command.textContent = e.data;
+        console.log(e.data);
     });
 
     evtSource.addEventListener('stdout', (e) => {
@@ -51,13 +60,6 @@ function runCommand(id, dr) {
 
     evtSource.addEventListener('exit', (e) => {
         output.textContent += '\n' + e.data;
-        const doitBtn = document.getElementById('doit');
-        if (hasDryRun && dr) {
-            doitBtn.onclick = () => runCommand(id, false);
-            doitBtn.style.display = 'block';
-        } else {
-            doitBtn.style.display = 'none';
-        }
         evtSource.close(); // important — see note below
     });
 
@@ -67,8 +69,9 @@ function runCommand(id, dr) {
     };
 }
 
-async function killAll() {
-  await fetch('/api/kill-all', { method: 'POST' });
+async function stop() {
+    await fetch('/api/stop', { method: 'POST' });
 }
 
 loadCommands();
+subscribeToOutput();
