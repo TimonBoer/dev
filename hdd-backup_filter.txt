@@ -1,2 +1,2 @@
 - */sd/
-- "*/extra meuk"
+- */extra meuk/
