@@ -25,7 +25,7 @@ const commands = [
     hasDryRun: true,
     command: [
       '/usr/bin/rsync', '-arv',
-      '--filter="merge filter.txt"', '--delete',
+      '--filter=merge filter.txt', '--delete',
       path.join(hddPath, '/'), path.join(ssdPath, 'hdd-backup')
     ]
   },
@@ -34,7 +34,7 @@ const commands = [
     hasDryRun: true,
     command: [
       '/usr/bin/rsync', '-arv',
-      '--filter="merge filter.txt"', '--delete',
+      '--filter=merge filter.txt', '--delete',
       path.join(ssdPath, '/hdd-backup/'), hddPath
     ]
   },
