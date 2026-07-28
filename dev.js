@@ -2,67 +2,18 @@ const express = require('express')
 const path = require('path');
 const { spawn } = require('child_process');
 const { send } = require('process');
+const { commands } = require('./commands');
 
-const app = express()
-const port = 3141
+const app = express();
+const port = 3141;
 
 // parse application/x-www-form-urlencoded
-app.use(express.urlencoded({ extended: false }))
+app.use(express.urlencoded({ extended: false }));
 
 // parse application/json
-app.use(express.json())
+app.use(express.json());
 
-app.use(express.static(path.join(__dirname, 'public')))
-
-const hddPath = '/mnt/sda/shared/timon';
-const ssdPath = '/home/timon/immich-app';
-const backupPath = '/mnt/sdb'
-const folderName = 'fotos';
-
-const commands = [
-  {
-    name: 'mount all',
-    hasDryRun: false,
-    command: ['mount', '-a']
-  },
-  {
-    name: 'get state',
-    hasDryRun: false,
-    command: ['/sbin/hdparm', '-C', '/dev/sda']
-  },
-  {
-    name: 'spin down',
-    hasDryRun: false,
-    command: ['/sbin/hdparm', '-y', '/dev/sda']
-  },
-  {
-    name: "sync hdd -> ssd",
-    hasDryRun: true,
-    command: [
-      '/usr/bin/rsync', '-arv',
-      '--exclude', '*/sd', '--exclude', '*/extra meuk', '--delete',
-      path.join(hddPath, folderName), path.join(ssdPath, 'hdd-backup/timon')
-    ]
-  },
-  {
-    name: "sync ssd -> hdd",
-    hasDryRun: true,
-    command: [
-      '/usr/bin/rsync', '-arv',
-      '--exclude', '*/sd', '--exclude', '*/extra meuk', '--delete',
-      path.join(ssdPath, '/hdd-backup/timon', folderName), hddPath
-    ]
-  },
-  {
-    name: "sync ssd -> backup",
-    hasDryRun: true,
-    command: [
-      '/usr/bin/rsync', '-arv', '--exclude', 'postgres',
-      '--no-perms', '--no-group', '--no-owner', '--delete',
-      ssdPath, backupPath
-    ]
-  }
-]
+app.use(express.static(path.join(__dirname, 'public')));
 
 let runningCommand = null;
 

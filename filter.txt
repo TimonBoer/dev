@@ -1,0 +1,4 @@
+- */sd/
+- "*/extra meuk"
+- /timon/
++ /timon/fotos
