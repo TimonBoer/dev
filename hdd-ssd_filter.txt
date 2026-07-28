@@ -1,6 +1,8 @@
 - */sd/
-- "*/extra meuk"
-- /timon/
-+ /timon/fotos
+- */extra meuk/
++ /timon/
++ /timon/fotos/
++ /timon/fotos/**
+- /timon/*
 - /danielle/
 - /ahoe/
