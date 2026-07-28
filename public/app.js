@@ -45,6 +45,7 @@ function subscribeToOutput() {
     evtSource.addEventListener('stdout', (e) => {
         const data = JSON.parse(e.data);
         output.textContent += data.out;
+        output.scrollTop = output.scrollHeight;
     });
 
     evtSource.addEventListener('stderr', (e) => {

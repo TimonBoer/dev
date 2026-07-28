@@ -39,12 +39,21 @@ const commands = [
     ]
   },
   {
-    name: "sync ssd -> backup",
+    name: "sync ssd/immich-app -> backup",
     hasDryRun: true,
     command: [
       '/usr/bin/rsync', '-arv',
       '--filter=merge ssd-backup_filter.txt', '--delete',
       path.join(ssdPath, 'immich-app'), backupPath
+    ]
+  },
+  {
+    name: "sync ssd/shared -> backup",
+    hasDryRun: true,
+    command: [
+      '/usr/bin/rsync', '-arv',
+      '--delete',
+      path.join(ssdPath, 'shared'), backupPath
     ]
   },
   {

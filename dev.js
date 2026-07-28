@@ -68,8 +68,8 @@ app.post('/api/run', (req, res) => {
   const cmdlist = cmd.command.concat(additionalArgs);
 
   outputBuffer = []; // fresh history for this run
-  //runningCommand = spawn('ping', ['192.168.0.116']);
-  runningCommand = spawn('sudo', cmdlist);
+  runningCommand = spawn('ipconfig', ['-a']);
+  //runningCommand = spawn('sudo', cmdlist);
   runningCommand.stdout.setEncoding('utf8');
 
   // Attach listeners immediately — before returning the response —
@@ -92,8 +92,6 @@ app.post('/api/run', (req, res) => {
     runningCommand = null;
   });
 
-
-  // .replace(new RegExp('/', 'g'), '\\')
   const cmdString = toShellCommand('sudo', cmdlist);
   broadcast('cmd', cmdString);
   const hasDryRun = cmd.hasDryRun;
