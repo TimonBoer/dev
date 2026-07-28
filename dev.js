@@ -80,7 +80,7 @@ app.post('/api/run', (req, res) => {
 
 
   // .replace(new RegExp('/', 'g'), '\\')
-  const cmdString = 'sudo ' + cmdlist.join(' ');
+  const cmdString = ('sudo ' + cmdlist.join(' ')).replace(new RegExp("\\\\", "g"), '/');
   broadcast('cmd', cmdString);
   const hasDryRun = cmd.hasDryRun;
 

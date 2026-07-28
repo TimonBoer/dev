@@ -2,3 +2,5 @@
 - "*/extra meuk"
 - /timon/
 + /timon/fotos
+- /danielle/
+- /ahoe/
