@@ -52,7 +52,7 @@ const commands = [
     hasDryRun: true,
     command: [
       '/usr/bin/rsync', '-arv',
-      , path.join(ssdPath, 'shared'), backupPath
+      path.join(ssdPath, 'shared'), backupPath
     ]
   },
   {
