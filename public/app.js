@@ -53,16 +53,19 @@ function subscribeToOutput() {
     evtSource.addEventListener('stderr', (e) => {
         const data = JSON.parse(e.data);
         output.textContent += '\n[stderr] ' + data.out;
+        output.scrollTop = output.scrollHeight;
     });
 
     evtSource.addEventListener('err', (e) => {
         const data = JSON.parse(e.data);
         output.textContent += '\n[error] ' + data.out;
+        output.scrollTop = output.scrollHeight;
         evtSource.close();
     });
 
     evtSource.addEventListener('exit', (e) => {
         output.textContent += '\n' + e.data;
+        output.scrollTop = output.scrollHeight;
         evtSource.close(); // important — see note below
     });
 
