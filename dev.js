@@ -68,8 +68,8 @@ app.post('/api/run', (req, res) => {
   const cmdlist = cmd.command.concat(additionalArgs);
 
   outputBuffer = []; // fresh history for this run
-  runningCommand = spawn('ipconfig', ['-a']);
-  //runningCommand = spawn('sudo', cmdlist);
+  //runningCommand = spawn('ipconfig', ['-a']);
+  runningCommand = spawn('sudo', cmdlist);
   runningCommand.stdout.setEncoding('utf8');
 
   // Attach listeners immediately — before returning the response —
