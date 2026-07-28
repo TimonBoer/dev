@@ -34,7 +34,7 @@ const commands = [
     hasDryRun: true,
     command: [
       '/usr/bin/rsync', '-arv',
-      '--filter=merge hdd-sdd_filter.txt', '--delete',
+      '--filter=merge hdd-ssd_filter.txt', '--delete',
       path.join(ssdPath, 'shared'), hddPath
     ]
   },
