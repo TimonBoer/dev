@@ -52,8 +52,7 @@ const commands = [
     hasDryRun: true,
     command: [
       '/usr/bin/rsync', '-arv',
-      '--delete',
-      path.join(ssdPath, 'shared'), backupPath
+      , path.join(ssdPath, 'shared'), backupPath
     ]
   },
   {
