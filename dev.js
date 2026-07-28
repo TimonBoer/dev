@@ -54,6 +54,7 @@ app.post('/api/run', (req, res) => {
   }
   const id = req.query.id;
   const doit = req.query.doit === '1';
+  const del_arg = req.query.del === '1';
   const cmd = commands[id];
   if (!cmd) {
     res.status(404).end();
@@ -63,6 +64,10 @@ app.post('/api/run', (req, res) => {
   let additionalArgs = [];
   if (cmd.hasDryRun && !doit) {
     additionalArgs.push('-n');
+  }
+
+  if (del_arg) {
+    additionalArgs.push('--delete');
   }
 
   const cmdlist = cmd.command.concat(additionalArgs);

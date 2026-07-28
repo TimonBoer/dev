@@ -43,6 +43,24 @@ button.destructive:hover {
     background: #3a1111;
 }
 
+.checkbox{
+  cursor: pointer;
+  font-size: 22px;
+  background-color: #111;
+  padding:5px;
+  border-radius: 5px;
+  margin-top: 5px;
+}
+
+.checkbox:hover{
+    background-color: #222;
+}
+
+#stop_btn_container {
+    width: 100%;
+    text-align: right;
+}
+
 #out_container {
     border: 1px solid #333;
     margin-top: 10px;

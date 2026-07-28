@@ -25,7 +25,7 @@ const commands = [
     hasDryRun: true,
     command: [
       '/usr/bin/rsync', '-arv',
-      '--filter=merge hdd-ssd_filter.txt', '--delete',
+      '--filter=merge hdd-ssd_filter.txt',
       path.join(hddPath, 'shared'), ssdPath
     ]
   },
@@ -34,7 +34,7 @@ const commands = [
     hasDryRun: true,
     command: [
       '/usr/bin/rsync', '-arv',
-      '--filter=merge hdd-ssd_filter.txt', '--delete',
+      '--filter=merge hdd-ssd_filter.txt',
       path.join(ssdPath, 'shared'), hddPath
     ]
   },
@@ -43,7 +43,7 @@ const commands = [
     hasDryRun: true,
     command: [
       '/usr/bin/rsync', '-arv',
-      '--filter=merge ssd-backup_filter.txt', '--delete',
+      '--filter=merge ssd-backup_filter.txt',
       path.join(ssdPath, 'immich-app'), backupPath
     ]
   },
@@ -60,7 +60,7 @@ const commands = [
     hasDryRun: true,
     command: [
       '/usr/bin/rsync', '-arv',
-      '--filter=merge hdd-backup_filter.txt', '--delete',
+      '--filter=merge hdd-backup_filter.txt',
       path.join(hddPath, 'shared'), backupPath
     ]
   }

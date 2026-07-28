@@ -15,7 +15,9 @@ async function runCommand(id, doit) {
     const doitBtn = document.getElementById('doit');
     doitBtn.style.display = 'none';
 
-    const res = await fetch(`/api/run?id=${id}&doit=${doit ? 1 : 0}`, { method: 'POST' });
+    const delCheck = document.getElementById('delete');
+
+    const res = await fetch(`/api/run?id=${id}&doit=${doit ? 1 : 0}&del=${delCheck.checked ? 1 : 0}`, { method: 'POST' });
     subscribeToOutput();
     const {hasDryRun, cmdString} = await res.json();
 
