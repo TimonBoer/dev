@@ -1,8 +1,5 @@
 - */sd/
 - */extra meuk/
-+ /timon/
-+ /timon/fotos/
-+ /timon/fotos/**
-- /timon/*
+- /timon/bestanden/
 - /danielle/
 - /ahoe/
