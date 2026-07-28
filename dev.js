@@ -25,6 +25,20 @@ function broadcast(event, data) {
   subscribers.forEach((res) => sendEvent(res, event, data));
 }
 
+function shellQuote(arg) {
+  arg = arg.replace(new RegExp("\\\\", "g"), '/');
+  // If the arg is "safe" (no special chars), leave it unquoted for readability
+  if (/^[a-zA-Z0-9_\-./=:@]+$/.test(arg)) {
+    return arg;
+  }
+  // Otherwise wrap in single quotes, escaping any existing single quotes
+  return `'${arg.replace(/'/g, `'\\''`)}'`;
+}
+
+function toShellCommand(cmd, args) {
+  return [cmd, ...args].map(shellQuote).join(' ');
+}
+
 // list available commands for the UI to render buttons from
 app.get('/api/commands', (req, res) => {
   const list = Object.entries(commands).map(([id, c]) => ({
@@ -80,7 +94,7 @@ app.post('/api/run', (req, res) => {
 
 
   // .replace(new RegExp('/', 'g'), '\\')
-  const cmdString = ('sudo ' + cmdlist.join(' ')).replace(new RegExp("\\\\", "g"), '/');
+  const cmdString = toShellCommand('sudo', cmdlist);
   broadcast('cmd', cmdString);
   const hasDryRun = cmd.hasDryRun;
 

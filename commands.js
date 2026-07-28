@@ -1,6 +1,6 @@
 const path = require('path');
 
-const hddPath = '/mnt/sda/shared';
+const hddPath = '/mnt/sda';
 const ssdPath = '/home/timon';
 const backupPath = '/mnt/sdb';
 
@@ -25,8 +25,8 @@ const commands = [
     hasDryRun: true,
     command: [
       '/usr/bin/rsync', '-arv',
-      '--filter=merge filter.txt', '--delete',
-      path.join(hddPath, '/'), path.join(ssdPath, 'hdd-backup')
+      '--filter=merge hdd-ssd_filter.txt', '--delete',
+      path.join(hddPath, 'shared'), ssdPath
     ]
   },
   {
@@ -34,17 +34,26 @@ const commands = [
     hasDryRun: true,
     command: [
       '/usr/bin/rsync', '-arv',
-      '--filter=merge filter.txt', '--delete',
-      path.join(ssdPath, '/hdd-backup/'), hddPath
+      '--filter=merge hdd-sdd_filter.txt', '--delete',
+      path.join(ssdPath, 'shared'), hddPath
     ]
   },
   {
     name: "sync ssd -> backup",
     hasDryRun: true,
     command: [
-      '/usr/bin/rsync', '-arv', '--exclude', 'postgres',
-      '--no-perms', '--no-group', '--no-owner', '--delete',
-      ssdPath, backupPath
+      '/usr/bin/rsync', '-arv',
+      '--filter=merge ssd-backup_filter.txt', '--delete',
+      path.join(ssdPath, 'immich-app'), backupPath
+    ]
+  },
+  {
+    name: "sync hdd -> backup",
+    hasDryRun: true,
+    command: [
+      '/usr/bin/rsync', '-arv',
+      '--filter=merge hdd-backup_filter.txt', '--delete',
+      path.join(hddPath, 'shared'), backupPath
     ]
   }
 ]
