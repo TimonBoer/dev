@@ -6,11 +6,6 @@ const backupPath = '/mnt/sdb';
 
 const commands = [
   {
-    name: 'mount all',
-    hasDryRun: false,
-    command: ['mount', '-a']
-  },
-  {
     name: 'get state',
     hasDryRun: false,
     command: ['/sbin/hdparm', '-C', '/dev/sda']
@@ -39,11 +34,17 @@ const commands = [
     ]
   },
   {
+    name: 'mount backup drive',
+    hasDryRun: false,
+    command: ['mount', '/mnt/sdb']
+  },
+  {
     name: "sync ssd/immich-app -> backup",
     hasDryRun: true,
     command: [
       '/usr/bin/rsync', '-arv',
-      '--filter=merge ssd-backup_filter.txt',
+      '--filter=merge ssdImmich-backup_filter.txt',
+      //'--no-perms', '--no-owner', '--no-group',
       path.join(ssdPath, 'immich-app'), backupPath
     ]
   },

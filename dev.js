@@ -66,7 +66,7 @@ app.post('/api/run', (req, res) => {
     additionalArgs.push('-n');
   }
 
-  if (del_arg) {
+  if (cmd.hasDryRun && del_arg) {
     additionalArgs.push('--delete');
   }
 
