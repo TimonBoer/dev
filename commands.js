@@ -39,6 +39,11 @@ const commands = [
     command: ['mount', '/mnt/sdb']
   },
   {
+    name: 'umount backup drive',
+    hasDryRun: false,
+    command: ['umount', '/mnt/sdb']
+  },
+  {
     name: "sync ssd/immich-app -> backup",
     hasDryRun: true,
     command: [
