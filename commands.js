@@ -1,87 +1,70 @@
 const path = require('path');
 
-const hdd = '/mnt/sda';
-const ssd = '/home/timon';
-const backup = '/mnt/sdb';
-
-const commands = [
+const drives = [
   {
-    name: 'get state',
-    hasDryRun: false,
-    command: ['/sbin/hdparm', '-C', '/dev/sda']
+    name: 'ssd',
+    path: '/home/timon',
+    commands: []
   },
   {
-    name: 'spin down',
-    hasDryRun: false,
-    command: ['/sbin/hdparm', '-y', '/dev/sda']
-  },
-  {
-    name: "sync hdd -> ssd",
-    hasDryRun: true,
-    command: [
-      '/usr/bin/rsync', '-arv',
-      '--filter=merge hdd-ssd_filter.txt',
-      path.join(hdd, 'shared'), ssd
+    name: 'hdd',
+    path: '/mnt/sda',
+    commands: [
+      {
+        name: 'get state',
+        command: ['/sbin/hdparm', '-C', '/dev/sda']
+      },
+      {
+        name: 'spin down',
+        command: ['/sbin/hdparm', '-y', '/dev/sda']
+      }
     ]
   },
   {
-    name: "sync ssd -> hdd",
-    hasDryRun: true,
-    command: [
-      '/usr/bin/rsync', '-arv',
-      '--filter=merge hdd-ssd_filter.txt',
-      path.join(ssd, 'shared'), hdd
-    ]
-  },
-  {
-    name: 'mount backup drive',
-    hasDryRun: false,
-    command: ['mount', '/mnt/sdb']
-  },
-  {
-    name: 'umount backup drive',
-    hasDryRun: false,
-    command: ['umount', '/mnt/sdb']
-  },
-  {
-    name: "sync ssd/immich-app -> backup",
-    hasDryRun: true,
-    command: [
-      '/usr/bin/rsync', '-arv',
-      '--filter=merge ssdImmich-backup_filter.txt',
-      '--no-perms', '--no-owner', '--no-group',
-      path.join(ssd, 'immich-app'), backup
-    ]
-  },
-  {
-    name: "sync backup/immich-app -> ssd",
-    hasDryRun: true,
-    command: [
-      '/usr/bin/rsync', '-arv',
-      '--filter=merge ssdImmich-backup_filter.txt',
-      '--no-perms', '--no-owner', '--no-group',
-      path.join(backup, 'immich-app'), ssd
-    ]
-  },
-  {
-    name: "sync ssd/shared -> backup",
-    hasDryRun: true,
-    command: [
-      '/usr/bin/rsync', '-arv',
-      '--no-perms', '--no-owner', '--no-group',
-      path.join(ssd, 'shared'), backup
-    ]
-  },
-  {
-    name: "sync hdd -> backup",
-    hasDryRun: true,
-    command: [
-      '/usr/bin/rsync', '-arv',
-      '--filter=merge hdd-backup_filter.txt',
-      '--no-perms', '--no-owner', '--no-group',
-      path.join(hdd, 'shared'), backup
+    name: 'backup',
+    path: '/mnt/sdb',
+    commands: [
+      {
+        name: 'mount',
+        command: ['mount', '/mnt/sdb']
+      },
+      {
+        name: 'umount',
+        command: ['umount', '/mnt/sdb']
+      }
     ]
   }
 ]
 
-module.exports = {commands};
+const folders = [
+  'immich', 'shared'
+]
+
+function getRsyncCmd(srcId, destId, folderId) {
+  const src = drives[srcId];
+  const dest = drives[destId];
+  const folder = folders[folderId];
+
+  const driveNames = [src.name, dest.name].sort();
+
+  const rsync = ['/usr/bin/rsync', '-arv'];
+
+  let filterArg = [];
+  if (folder == 'shared') {
+    const filter = `${driveNames[0]}-${driveNames[1]}_filter.txt`;
+    filterArg = [`--filter=merge ${filter}`];
+  } else if (folder == 'immich') {
+    const filter = `immich_filter.txt`;
+    filterArg = [`--filter=merge ${filter}`];
+  }
+
+  const noPermArgs = ['--no-perms', '--no-owner', '--no-group'];
+
+  const paths = [path.join(src.path, folder), dest.path];
+
+  const cmd = rsync.concat(filterArg, noPermArgs, paths);
+
+  return cmd;
+}
+
+module.exports = {drives, folders, getRsyncCmd};

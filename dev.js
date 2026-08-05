@@ -1,11 +1,19 @@
 const express = require('express')
 const path = require('path');
+const basicAuth = require('express-basic-auth');
 const { spawn } = require('child_process');
 const { send } = require('process');
-const { commands } = require('./commands');
+const { drives, folders, getRsyncCmd} = require('./commands');
+const { get } = require('http');
+
 
 const app = express();
 const port = 3141;
+
+app.use(basicAuth({
+  users: { 'timon': 'boem' },
+  challenge: true,
+}));
 
 // parse application/x-www-form-urlencoded
 app.use(express.urlencoded({ extended: false }));
@@ -25,6 +33,11 @@ function broadcast(event, data) {
   subscribers.forEach((res) => sendEvent(res, event, data));
 }
 
+function sendEvent(res, event, data) {
+  res.write(`event: ${event}\n`);
+  res.write(`data: ${data}\n\n`);
+}
+
 function shellQuote(arg) {
   arg = arg.replace(new RegExp("\\\\", "g"), '/');
   // If the arg is "safe" (no special chars), leave it unquoted for readability
@@ -41,10 +54,29 @@ function toShellCommand(cmd, args) {
 
 // list available commands for the UI to render buttons from
 app.get('/api/commands', (req, res) => {
-  const list = Object.entries(commands).map(([id, c]) => ({
-    id, label: c.name || [],
-  }));
-  res.json(list);
+  res.json({drives, folders});
+});
+
+app.post('/api/runRsync', (req, res) => {
+  if (runningCommand) {
+    res.status(409).json({ error: 'A command is already running' });
+    return;
+  }
+  const d = req.body;
+
+  let additionalArgs = [];
+  if (d.dryRun) {
+    additionalArgs.push('-n');
+  }
+
+  if (d.deleteArg) {
+    additionalArgs.push('--delete');
+  }
+
+  const cmdList = getRsyncCmd(d.src, d.dest, d.folder).concat(additionalArgs);
+
+  runCmdList(cmdList);
+  res.end();
 });
 
 app.post('/api/run', (req, res) => {
@@ -52,29 +84,23 @@ app.post('/api/run', (req, res) => {
     res.status(409).json({ error: 'A command is already running' });
     return;
   }
-  const id = req.query.id;
-  const doit = req.query.doit === '1';
-  const del_arg = req.query.del === '1';
-  const cmd = commands[id];
+  const driveId = req.query.driveId;
+  const cmdId = req.query.cmdId;
+  
+  const cmd = drives[driveId].commands[cmdId];
   if (!cmd) {
     res.status(404).end();
     return;
   }
 
-  let additionalArgs = [];
-  if (cmd.hasDryRun && !doit) {
-    additionalArgs.push('-n');
-  }
+  runCmdList(cmd.command);
+  res.end();
+});
 
-  if (cmd.hasDryRun && del_arg) {
-    additionalArgs.push('--delete');
-  }
-
-  const cmdlist = cmd.command.concat(additionalArgs);
-
+function runCmdList(cmdList) {
   outputBuffer = []; // fresh history for this run
   //runningCommand = spawn('ipconfig', ['-a']);
-  runningCommand = spawn('sudo', cmdlist);
+  runningCommand = spawn('sudo', cmdList);
   runningCommand.stdout.setEncoding('utf8');
 
   // Attach listeners immediately — before returning the response —
@@ -97,12 +123,9 @@ app.post('/api/run', (req, res) => {
     runningCommand = null;
   });
 
-  const cmdString = toShellCommand('sudo', cmdlist);
+  const cmdString = toShellCommand('sudo', cmdList);
   broadcast('cmd', cmdString);
-  const hasDryRun = cmd.hasDryRun;
-
-  res.json({ hasDryRun, cmdString });
-});
+};
 
 app.get('/api/subscribe', (req, res) => {
   res.writeHead(200, {
@@ -124,10 +147,13 @@ app.get('/api/subscribe', (req, res) => {
   }
 });
 
-function sendEvent(res, event, data) {
-  res.write(`event: ${event}\n`);
-  res.write(`data: ${data}\n\n`);
-}
+app.post('/api/clear', (req, res) => {
+  if (!runningCommand) {
+    outputBuffer = [];
+    subscribers = [];
+  }
+  res.end();
+})
 
 app.post('/api/stop', (req, res) => {
   if (runningCommand) {
