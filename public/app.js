@@ -1,5 +1,6 @@
 let btns = [];
-let selected = null;
+let selected_src = null;
+let selected_dest = null;
 
 async function loadCommands() {
     const res = await fetch('/api/commands');
@@ -46,23 +47,32 @@ async function folderBtnClick(driveId, folderId) {
         driveBtns[1 - folderId].disabled = true;
     });
 
-    if (selected) {
-        console.log(selected, current);
-        if (selected[0] === current[0] && selected[1] === current[1]) {
+    if (selected_src) {
+        if (arr_equal(selected_src, current)) {
             clearUi();
-        } else {
-            btns[driveId][folderId].classList = ['selected'];
-            const doitBtn = document.getElementById('doit');
-            const res = await runRsync(selected[0], current[0], selected[1], true);
-            if (res.status == 200) {
-                doitBtn.onclick = () => runRsync(selected[0], current[0], selected[1], false);
-                doitBtn.style.display = 'block';
+            return;
+        }
+        if (selected_dest) {
+            if (!arr_equal(selected_dest, current)) {
+                btns[selected_dest[0]][selected_dest[1]].classList = [];
             }
         }
+        selected_dest = current;
+        btns[driveId][folderId].classList = ['selected'];
+        const doitBtn = document.getElementById('doit');
+        const res = await runRsync(selected_src[0], current[0], selected_src[1], true);
+        if (res.status == 200) {
+            doitBtn.onclick = () => runRsync(selected_src[0], current[0], selected_src[1], false);
+            doitBtn.style.display = 'block';
+        }
     } else {
-        selected = current;
+        selected_src = current;
         btns[driveId][folderId].classList = ['selected'];
     }
+}
+
+function arr_equal(a, b) {
+    return a[0] === b[0] && a[1] === b[1];
 }
 
 async function runRsync(src, dest, folder, dryRun) {
@@ -92,7 +102,8 @@ async function runCommand(driveId, cmdId) {
 async function clearUi() {
     const doitBtn = document.getElementById('doit');
     doitBtn.style.display = 'none';
-    selected = null;
+    selected_src = null;
+    selected_dest = null;
     btns.forEach((driveBtns) => {
         driveBtns.forEach((btn) => {
             btn.disabled = false;
@@ -110,7 +121,7 @@ function subscribeToOutput() {
     const output = document.getElementById('output');
     output.textContent = '';
 
-    const evtSource = new EventSource(`api/subscribe`);
+    const evtSource = new EventSource(`/api/subscribe`);
 
     evtSource.addEventListener('cmd', (e) => {
         command.textContent = e.data;
