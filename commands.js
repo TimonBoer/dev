@@ -37,7 +37,7 @@ const drives = [
 ]
 
 const folders = [
-  'immich', 'shared'
+  'immich-app', 'shared'
 ]
 
 function getRsyncCmd(srcId, destId, folderId) {
@@ -53,7 +53,7 @@ function getRsyncCmd(srcId, destId, folderId) {
   if (folder == 'shared') {
     const filter = `${driveNames[0]}-${driveNames[1]}_filter.txt`;
     filterArg = [`--filter=merge ${filter}`];
-  } else if (folder == 'immich') {
+  } else if (folder == 'immich-app') {
     const filter = `immich_filter.txt`;
     filterArg = [`--filter=merge ${filter}`];
   }
