@@ -1,0 +1,5 @@
+- */sd/
+- */extra meuk/
+- /shared/timon/bestanden/
+- /shared/danielle/
+- /shared/ahoe/
