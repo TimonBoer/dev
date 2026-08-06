@@ -25,12 +25,24 @@ const drives = [
     path: '/mnt/sdb',
     commands: [
       {
-        name: 'mount',
+        name: 'mount /mnt/sdb',
         command: ['mount', '/mnt/sdb']
       },
       {
-        name: 'umount',
+        name: 'umount /mnt/sdb',
         command: ['umount', '/mnt/sdb']
+      },
+      {
+        name: 'mount /home/nas',
+        command: ['mount', '/home/nas/drives/backup']
+      },
+      {
+        name: 'umount /home/nas',
+        command: ['umount', '/home/nas/drives/backup']
+      },
+      {
+        name: 'list mounts',
+        command: ['lsblk']
       }
     ]
   }
